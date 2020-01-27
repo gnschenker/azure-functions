@@ -1,0 +1,29 @@
+version: "2.4"
+services:
+    # function:
+    #     image: acme/sample-timer-trigger:0.1
+    #     build: function
+
+    db:
+        # image: mcr.microsoft.com/mssql/server:2019-latest
+        image: custom-sql-server
+        build: Database
+        environment: 
+            ACCEPT_EULA: Y
+            SA_PASSWORD: Top-Secret
+            MSSQL_PID: Developer
+        healthcheck:
+            test: nc -z localhost 1433 || exit -1
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 15s
+          
+    init-db:
+        image: mcr.microsoft.com/mssql/server:2019-latest
+        volumes:
+            - ./Database:/usr/src/app
+        command: /usr/src/app/import-data.sh
+        depends_on: 
+            db:
+                condition: service_healthy
